@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+gyft-ss
+
+# Test images folder
+images
