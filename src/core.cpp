@@ -1,6 +1,8 @@
 #include <iostream>
 #include <algorithm>
 #include <opencv2/opencv.hpp>
+#include <tesseract/baseapi.h>
+#include <leptonica/allheaders.h>
 
 using namespace cv;
 using namespace std;
@@ -8,7 +10,7 @@ using namespace std;
 int main()
 {
 	// Load source image
-	string filename = "images/naresh.png";
+	string filename = "images/himanshu.png";
 	Mat src = imread(filename);
 
 	// Check if image is loaded fine
@@ -120,5 +122,13 @@ int main()
         imshow("roi", rois[i]);
         waitKey();
 	}
+
+    tesseract::TessBaseAPI *tess = new tesseract::TessBaseAPI();
+    // Initialize tesseract-ocr with English, without specifying tessdata path
+    if (tess->Init(NULL, "eng")) {
+        fprintf(stderr, "Could not initialize tesseract.\n");
+        exit(1);
+    }
+	tess->End();
 	return 0;
 }
