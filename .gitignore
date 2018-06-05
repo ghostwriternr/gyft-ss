@@ -34,3 +34,8 @@ gyft-ss
 
 # Test images folder
 images
+
+# Editor files
+.vscode
+*.un~
+
