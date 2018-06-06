@@ -174,7 +174,7 @@ int main() {
   for (size_t i = 0; i < contours.size(); i++) {
     if (hierarchy[i][2] == -1) {
       double area = contourArea(contours[i]);
-      cout << area << " " << hierarchy[i] << endl;
+      // cout << area << " " << hierarchy[i] << endl;
       if (area < 800 || area > 10000)
         continue;
       approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
@@ -201,16 +201,28 @@ int main() {
     exit(1);
   }
   for (size_t i = 0; i < roi_contours.size(); ++i) {
-    imshow("yolo", roi_contours[i].first);
-    cout << roi_contours[i].second << endl;
+    Mat temp_gray, temp_bw;
+    cvtColor(roi_contours[i].first, temp_gray, CV_BGR2GRAY);
+    threshold(temp_gray, temp_bw, 0, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
+    double avg_brightness = 0;
+    for (int r = 0; r < temp_bw.rows; ++r) {
+      for (int c = 0; c < temp_bw.cols; ++c) {
+        int pix_val = temp_bw.at<uchar>(r, c);
+        avg_brightness += pix_val;
+      }
+    }
+    avg_brightness /= (temp_bw.rows * temp_bw.cols);
+    if (avg_brightness < 128)
+      bitwise_not(temp_bw, temp_bw);
+    imshow("yolo", temp_bw);
+    // cout << roi_contours[i].second << endl;
     waitKey();
-    tess->SetImage(
-        (uchar *)roi_contours[i].first.data, roi_contours[i].first.size().width,
-        roi_contours[i].first.size().height, roi_contours[i].first.channels(),
-        roi_contours[i].first.step1());
+    tess->SetImage((uchar *)temp_bw.data, temp_bw.size().width,
+                   temp_bw.size().height, temp_bw.channels(), temp_bw.step1());
     tess->Recognize(0);
     const char *out = tess->GetUTF8Text();
-    cout << out << endl;
+    if (strlen(out) > 3)
+      cout << out << endl;
   }
   tess->End();
   return 0;
