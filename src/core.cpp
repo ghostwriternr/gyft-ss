@@ -11,11 +11,16 @@ RNG rng(12345);
 
 struct contour_sorter // 'less' for contours
 {
-  bool operator()(const vector<Point> &a, const vector<Point> &b) {
-    Rect ra(boundingRect(a));
-    Rect rb(boundingRect(b));
+  bool operator()(const pair<Mat, vector<Point>> &a,
+                  const pair<Mat, vector<Point>> &b) {
+    Rect ra(boundingRect(a.second));
+    Rect rb(boundingRect(b.second));
     // scale factor for y should be larger than img.width
-    return ((ra.x + 2000 * ra.y) < (rb.x + 2000 * rb.y));
+    // return ((ra.x + 2000 * ra.y) < (rb.x + 2000 * rb.y));
+    // printf("%d %d %d %d\n", ra.x, ra.y, rb.x, rb.y);
+    if (ra.y == rb.y)
+      return ra.x < rb.x;
+    return ra.y < rb.y;
   }
 };
 
@@ -164,12 +169,13 @@ int main() {
   boundRect.resize(contours.size());
   rois.clear();
 
-  std::sort(contours.begin(), contours.end(), contour_sorter());
+  vector<pair<Mat, vector<Point>>> roi_contours;
 
   for (size_t i = 0; i < contours.size(); i++) {
     if (hierarchy[i][2] == -1) {
       double area = contourArea(contours[i]);
-      if (area < 250)
+      cout << area << " " << hierarchy[i] << endl;
+      if (area < 800 || area > 10000)
         continue;
       approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
       boundRect[i] = boundingRect(Mat(contours_poly[i]));
@@ -177,10 +183,16 @@ int main() {
           Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
       // drawContours( ttCopy, contours, i, color, 2, 8, hierarchy, 0, Point()
       // );
-      rectangle(ttCopy, boundRect[i].tl(), boundRect[i].br(), color, 1, 8, 0);
-      rois.push_back(timetableImage(boundRect[i]).clone());
+      rectangle(ttCopy, boundRect[i].tl(), boundRect[i].br(), color, 3, 8, 0);
+      roi_contours.push_back(
+          make_pair(timetableImage(boundRect[i]).clone(), contours_poly[i]));
     }
   }
+
+  imshow("huha", ttCopy);
+  waitKey();
+
+  std::sort(roi_contours.begin(), roi_contours.end(), contour_sorter());
 
   tesseract::TessBaseAPI *tess = new tesseract::TessBaseAPI();
   // Initialize tesseract-ocr with English, without specifying tessdata path
@@ -188,11 +200,14 @@ int main() {
     fprintf(stderr, "Could not initialize tesseract.\n");
     exit(1);
   }
-  for (size_t i = 0; i < rois.size(); ++i) {
-    imshow("yolo", rois[i]);
+  for (size_t i = 0; i < roi_contours.size(); ++i) {
+    imshow("yolo", roi_contours[i].first);
+    cout << roi_contours[i].second << endl;
     waitKey();
-    tess->SetImage((uchar *)rois[i].data, rois[i].size().width,
-                   rois[i].size().height, rois[i].channels(), rois[i].step1());
+    tess->SetImage(
+        (uchar *)roi_contours[i].first.data, roi_contours[i].first.size().width,
+        roi_contours[i].first.size().height, roi_contours[i].first.channels(),
+        roi_contours[i].first.step1());
     tess->Recognize(0);
     const char *out = tess->GetUTF8Text();
     cout << out << endl;
