@@ -24,9 +24,14 @@ struct contour_sorter // 'less' for contours
   }
 };
 
-int main() {
+int main(int argc, char **argv) {
   // Load source image
-  string filename = "images/himanshu.png";
+  if (argc != 2) {
+    cerr << "Incorrect number of arguments!" << endl;
+  }
+
+  string filename(argv[1]);
+  cout << filename << endl;
   Mat src = imread(filename);
 
   // Check if image is loaded fine
@@ -35,14 +40,15 @@ int main() {
   }
 
   // Resizing for practical reasons
-  Mat rsz;
+  Mat scaled, rsz;
   double rszScale;
-  if (max(src.size().height, src.size().width) > 1500) {
-    rszScale = 1500 / double(max(src.size().height, src.size().width));
-  } else {
-    rszScale = 1;
+  rszScale = 1500 / double(src.size().width);
+  resize(src, scaled, Size(), rszScale, rszScale);
+  fastNlMeansDenoising(scaled, scaled);
+  if (rszScale > 1) {
+    GaussianBlur(scaled, rsz, cv::Size(0, 0), 3);
+    addWeighted(scaled, 1.5, rsz, -0.5, 0, rsz);
   }
-  resize(src, rsz, Size(), rszScale, rszScale);
 
   // Transform source image to gray if it is not
   Mat gray;
@@ -214,6 +220,7 @@ int main() {
     avg_brightness /= (temp_bw.rows * temp_bw.cols);
     if (avg_brightness < 128)
       bitwise_not(temp_bw, temp_bw);
+    fastNlMeansDenoising(temp_bw, temp_bw);
     imshow("yolo", temp_bw);
     // cout << roi_contours[i].second << endl;
     waitKey();
