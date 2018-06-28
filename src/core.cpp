@@ -42,12 +42,14 @@ int main(int argc, char **argv) {
   // Resizing for practical reasons
   Mat scaled, rsz;
   double rszScale;
-  rszScale = 1500 / double(src.size().width);
+  rszScale = 1500 / double(max(src.size().height, src.size().width));
   resize(src, scaled, Size(), rszScale, rszScale);
   fastNlMeansDenoising(scaled, scaled);
   if (rszScale > 1) {
     GaussianBlur(scaled, rsz, cv::Size(0, 0), 3);
     addWeighted(scaled, 1.5, rsz, -0.5, 0, rsz);
+  } else {
+    rsz = scaled;
   }
 
   // Transform source image to gray if it is not
