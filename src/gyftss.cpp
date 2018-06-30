@@ -305,7 +305,7 @@ PyObject *vectorVectorToTuple_String(const vector<vector<string>> &data) {
 }
 
 static PyObject *gyftss_wrapper(PyObject *Py_UNUSED(self), PyObject *args) {
-  const char* filename;
+  const char *filename;
   vector<vector<string>> timetable;
   PyObject *ret;
 
@@ -323,13 +323,8 @@ static PyMethodDef GyftssMethods[] = {
      "Get timetable from array from screenshot"},
     {NULL, NULL, 0, NULL}};
 
-static struct PyModuleDef gyftssmodule = {
-    PyModuleDef_HEAD_INIT,
-    "gyftss",
-    NULL,
-    -1,
-    GyftssMethods
-};
+static struct PyModuleDef gyftssmodule = {PyModuleDef_HEAD_INIT, "gyftss", NULL,
+                                          -1, GyftssMethods};
 
 PyMODINIT_FUNC PyInit_gyftss(void) { return PyModule_Create(&gyftssmodule); }
 
