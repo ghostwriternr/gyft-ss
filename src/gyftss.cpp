@@ -1,8 +1,12 @@
+#include <Python.h>
 #include <algorithm>
 #include <iostream>
 #include <leptonica/allheaders.h>
 #include <opencv2/opencv.hpp>
 #include <tesseract/baseapi.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 using namespace cv;
 using namespace std;
@@ -42,14 +46,7 @@ vector<int> group_cells(vector<pair<Mat, vector<Point>>> roi_contours) {
   return starts;
 }
 
-int main(int argc, char **argv) {
-  // Load source image
-  if (argc != 2) {
-    cerr << "Incorrect number of arguments!" << endl;
-  }
-
-  string filename(argv[1]);
-  cout << filename << endl;
+vector<vector<string>> get_timetable(string filename) {
   Mat src = imread(filename);
 
   // Check if image is loaded fine
@@ -256,5 +253,86 @@ int main(int argc, char **argv) {
     cout << endl;
     cout << "===============\n";
   }
+  return timetable;
+}
+
+int main(int argc, char **argv) {
+  // Load source image
+  if (argc != 2) {
+    cerr << "Incorrect number of arguments!" << endl;
+  }
+
+  string filename(argv[1]);
+  get_timetable(filename);
   return 0;
 }
+
+PyObject *vectorToTuple_String(const vector<string> &data) {
+  PyObject *tuple = PyTuple_New(data.size());
+  if (!tuple)
+    throw logic_error("Unable to allocate memory for Python tuple");
+  for (unsigned int i = 0; i < data.size(); i++) {
+    PyObject *str = PyBytes_FromString(data[i].c_str());
+    if (!str) {
+      Py_DECREF(tuple);
+      throw logic_error("Unable to allocate memory for Python tuple");
+    }
+    PyTuple_SET_ITEM(tuple, i, str);
+  }
+
+  return tuple;
+}
+
+PyObject *vectorVectorToTuple_String(const vector<vector<string>> &data) {
+  PyObject *tuple = PyTuple_New(data.size());
+  if (!tuple)
+    throw logic_error("Unable to allocate memory for Python tuple");
+  for (unsigned int i = 0; i < data.size(); i++) {
+    PyObject *subTuple = NULL;
+    try {
+      subTuple = vectorToTuple_String(data[i]);
+    } catch (logic_error &e) {
+      throw e;
+    }
+    if (!subTuple) {
+      Py_DECREF(tuple);
+      throw logic_error("Unable to allocate memory for Python tuple of tuples");
+    }
+    PyTuple_SET_ITEM(tuple, i, subTuple);
+  }
+
+  return tuple;
+}
+
+static PyObject *gyftss_wrapper(PyObject *Py_UNUSED(self), PyObject *args) {
+  const char* filename;
+  vector<vector<string>> timetable;
+  PyObject *ret;
+
+  if (!PyArg_ParseTuple(args, "s", &filename))
+    return NULL;
+
+  timetable = get_timetable(filename);
+  ret = vectorVectorToTuple_String(timetable);
+
+  return ret;
+}
+
+static PyMethodDef GyftssMethods[] = {
+    {"convert", gyftss_wrapper, METH_VARARGS,
+     "Get timetable from array from screenshot"},
+    {NULL, NULL, 0, NULL}};
+
+static struct PyModuleDef gyftssmodule = {
+    PyModuleDef_HEAD_INIT,
+    "gyftss",
+    NULL,
+    -1,
+    GyftssMethods
+};
+
+PyMODINIT_FUNC PyInit_gyftss(void) { return PyModule_Create(&gyftssmodule); }
+
+#ifdef __cplusplus
+}
+#endif

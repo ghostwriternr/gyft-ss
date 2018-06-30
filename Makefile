@@ -10,8 +10,8 @@ OBJ_FILES := $(addprefix $(OBJ_DIR)/,$(notdir $(CPP_FILES:.cpp=.o)))
 CXX          := g++
 WARNINGS     := -Wall -Wextra -ansi -pedantic
 INCLUDE_DIRS := -I./include
-CXXFLAGS     := $(WARNINGS) $(INCLUDE_DIRS) `pkg-config --cflags opencv lept tesseract` -O -std=c++11
-LDLIBS       := `pkg-config --libs opencv lept tesseract`
+CXXFLAGS     := $(WARNINGS) $(INCLUDE_DIRS) `pkg-config --cflags opencv lept tesseract python3` -O -std=c++11
+LDLIBS       := `pkg-config --libs opencv lept tesseract python3`
 
 RM    := rm -f
 RMDIR := rmdir
