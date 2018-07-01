@@ -32,8 +32,12 @@
 *.app
 gyft-ss
 
+# Server logs
+*.log
+
 # Test images folder
 images
+input_images
 
 # Editor files
 .vscode

@@ -246,14 +246,15 @@ vector<vector<string>> get_timetable(string filename) {
     timetable.push_back(timetable_row);
   }
   tess->End();
-  for (size_t i = 0; i < timetable.size(); ++i) {
-    for (size_t j = 0; j < timetable[i].size(); ++j) {
-      for (size_t k = 0; k < timetable[i][j].length(); k++) {
-        if (timetable[i][j][k] == '\n') {
+  auto timetable_temp = timetable;
+  for (size_t i = 0; i < timetable_temp.size(); ++i) {
+    for (size_t j = 0; j < timetable_temp[i].size(); ++j) {
+      for (size_t k = 0; k < timetable_temp[i][j].length(); k++) {
+        if (timetable_temp[i][j][k] == '\n') {
           cout << " ";
-          timetable[i][j][k] = ' ';
+          timetable_temp[i][j][k] = ' ';
         } else
-          cout << timetable[i][j][k];
+          cout << timetable_temp[i][j][k];
       }
       cout << " || ";
     }
@@ -327,7 +328,7 @@ static PyObject *gyftss_wrapper(PyObject *Py_UNUSED(self), PyObject *args) {
 
 static PyMethodDef GyftssMethods[] = {
     {"convert", gyftss_wrapper, METH_VARARGS,
-     "Get timetable from array from screenshot"},
+     "Get timetable as array from screenshot"},
     {NULL, NULL, 0, NULL}};
 
 static struct PyModuleDef gyftssmodule = {PyModuleDef_HEAD_INIT, "gyftss", NULL,
