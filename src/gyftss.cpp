@@ -248,7 +248,14 @@ vector<vector<string>> get_timetable(string filename) {
   tess->End();
   for (size_t i = 0; i < timetable.size(); ++i) {
     for (size_t j = 0; j < timetable[i].size(); ++j) {
-      cout << timetable[i][j] << " || ";
+      for (size_t k = 0; k < timetable[i][j].length(); k++) {
+        if (timetable[i][j][k] == '\n') {
+          cout << " ";
+          timetable[i][j][k] = ' ';
+        } else
+          cout << timetable[i][j][k];
+      }
+      cout << " || ";
     }
     cout << endl;
     cout << "===============\n";
