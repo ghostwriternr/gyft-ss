@@ -15,6 +15,8 @@ RNG rng(12345);
 int tt_rows = 6;
 int tt_cols = 10;
 
+vector< pair<int,int> > time_r;
+
 struct contour_sorter {
   bool operator()(const pair<Mat, vector<Point>> &a,
                   const pair<Mat, vector<Point>> &b) {
@@ -26,13 +28,20 @@ struct contour_sorter {
   }
 };
 
-vector<int> group_cells(vector<pair<Mat, vector<Point>>> roi_contours) {
+vector<int> group_cells(vector<pair<Mat, vector<Point>>> roi_contours, int tt_width) {
   vector<int> starts = {0};
   vector<pair<Mat, vector<Point>>> inter = roi_contours;
   vector<pair<int, int>> inter_points;
+  vector<pair< pair<int, int>, int> > inter_points_x; 
+  
+  float sub_wid = tt_width*(1-0.0672)/9; 
+
   for (size_t i = 0; i < inter.size(); ++i) {
     inter_points.push_back(make_pair(boundingRect(inter[i].second).y, i));
+    Rect cur = boundingRect(inter[i].second);
+    inter_points_x.push_back(make_pair(make_pair(cur.x,cur.x + cur.width),i));
   }
+ 
   for (size_t i = inter_points.size() - 1; i > 0; --i) {
     inter_points[i].first = inter_points[i].first - inter_points[i - 1].first;
   }
@@ -43,6 +52,28 @@ vector<int> group_cells(vector<pair<Mat, vector<Point>>> roi_contours) {
   }
   starts.push_back(roi_contours.size());
   sort(starts.begin(), starts.end());
+
+  int count=0;
+  for(size_t i=1; i <= tt_rows; i++)
+  {
+	int period=0;
+	for(size_t j=starts[i-1]; j < starts[i];j++)
+	{
+		if(j==starts[i-1]){
+		 time_r.push_back(make_pair(period,period+1));
+		 period++;
+		 count++;
+		 continue;
+		}
+		
+		int per_wid = round((inter_points_x[count].first.second - inter_points_x[count].first.first)/sub_wid);
+		time_r.push_back(make_pair(period,period+per_wid));
+		count++;
+		period+=per_wid;
+		cout<<time_r.back().first<<" ";
+	}
+	cout<<endl;
+  }
   return starts;
 }
 
@@ -202,7 +233,7 @@ vector<vector<string>> get_timetable(string filename) {
   for (size_t i = 0; i < roi_contours.size(); ++i) {
     boundRect[i] = boundingRect(Mat(roi_contours[i].second));
   }
-  vector<int> starts = group_cells(roi_contours);
+  vector<int> starts = group_cells(roi_contours,timetableImage.cols);
 
   tesseract::TessBaseAPI *tess = new tesseract::TessBaseAPI();
   // Initialize tesseract-ocr with English, without specifying tessdata path
