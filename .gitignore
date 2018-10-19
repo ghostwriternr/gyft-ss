@@ -45,3 +45,6 @@ input_images
 
 # Mac folder attributes
 .DS_Store
+
+# Egg files
+*.egg-info

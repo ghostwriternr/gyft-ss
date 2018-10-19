@@ -5,7 +5,7 @@ gyft_extension = Extension(
     include_dirs=['src'],
     libraries=[
         'opencv_core', 'opencv_imgproc', 'opencv_photo', 'opencv_imgcodecs',
-        'lept', 'tesseract', 'python3'
+        'lept', 'tesseract'
     ],
     extra_compile_args=['-std=c++11'],
     language='c++',
