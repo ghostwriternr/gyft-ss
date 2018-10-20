@@ -26,6 +26,16 @@ struct contour_sorter {
   }
 };
 
+struct mat_sorter {
+  bool operator()(const Mat &a, const Mat &b) {
+    int aRows = a.rows;
+    int aCols = a.cols;
+    int bRows = b.rows;
+    int bCols = b.cols;
+    return (aRows*aCols) > (bRows*bCols);
+  }
+};
+
 vector<int> group_cells(vector<pair<Mat, vector<Point>>> roi_contours) {
   vector<int> starts = {0};
   vector<pair<Mat, vector<Point>>> inter = roi_contours;
@@ -159,8 +169,10 @@ vector<vector<string>> get_timetable(string filename) {
       continue;
 
     rois.push_back(rsz(boundRect[i]).clone());
-    break;
   }
+
+  // Sort rois by area
+  std::sort(rois.begin(), rois.end(), mat_sorter());
 
   Mat timetableImage = rois[0];
   Mat ttGray, ttBw, ttCopy;
