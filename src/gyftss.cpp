@@ -56,6 +56,17 @@ vector<int> group_cells(vector<pair<Mat, vector<Point>>> roi_contours) {
   return starts;
 }
 
+Mat binariseTimetable(Mat input) {
+  Mat blueBack, background, titleFont, bodyFont, borders, result;
+  inRange(input, Scalar(213, 122, 83), Scalar(217, 126, 87), blueBack);
+  inRange(input, Scalar(252, 236, 237), Scalar(255, 240, 241), background);
+  inRange(input, Scalar(253, 253, 253), Scalar(255, 255, 255), titleFont);
+  inRange(input, Scalar(100, 0, 0), Scalar(104, 2, 2), bodyFont);
+  inRange(input, Scalar(50, 0, 0), Scalar(60, 2, 2), borders);
+  result = blueBack + background;
+  return result;
+}
+
 vector<vector<string>> get_timetable(string filename) {
   Mat src = imread(filename);
 
@@ -70,12 +81,7 @@ vector<vector<string>> get_timetable(string filename) {
   rszScale = 1500 / double(max(src.size().height, src.size().width));
   resize(src, scaled, Size(), rszScale, rszScale);
   fastNlMeansDenoising(scaled, scaled);
-  if (rszScale > 1) {
-    GaussianBlur(scaled, rsz, cv::Size(0, 0), 3);
-    addWeighted(scaled, 1.5, rsz, -0.5, 0, rsz);
-  } else {
-    rsz = scaled;
-  }
+  rsz = scaled;
 
   // Transform source image to gray if it is not
   Mat gray;
@@ -180,6 +186,7 @@ vector<vector<string>> get_timetable(string filename) {
   cvtColor(timetableImage, ttGray, CV_BGR2GRAY);
   adaptiveThreshold(~ttGray, ttBw, 255, CV_ADAPTIVE_THRESH_MEAN_C,
                     THRESH_BINARY, 15, -2);
+  // ttBw = binariseTimetable(ttCopy);
   hierarchy.clear();
   contours.clear();
   cv::findContours(ttBw, contours, hierarchy, RETR_CCOMP,
